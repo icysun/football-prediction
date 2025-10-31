@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>我的钱包 - 足球预测</title>
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-icons.css') }}">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        .card { 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15); 
+            border: none; 
+            border-radius: 15px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        @media (max-width: 768px) {
+            .card {
+                border-radius: 12px;
+                margin-bottom: 1rem;
+            }
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.2);
+        }
+        
+        .wallet-hero { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+            padding: 3rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        @media (max-width: 768px) {
+            .wallet-hero {
+                padding: 2rem 0;
+            }
+        }
+        
+        .wallet-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: shimmer 4s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .balance-display { 
+            font-size: 3rem; 
+            font-weight: bold; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: pulse 2s infinite;
+        }
+        
+        @media (max-width: 768px) {
+            .balance-display {
+                font-size: 2.2rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .balance-display {
+                font-size: 1.8rem;
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .stat-card { 
+            background: rgba(255,255,255,0.1); 
+            border: 1px solid rgba(255,255,255,0.2); 
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        @media (max-width: 768px) {
+            .stat-card {
+                border-radius: 12px;
+                margin-bottom: 1rem;
+            }
+        }
+        
+        .stat-card:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        
+        .stat-card .card-body {
+            padding: 1.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .stat-card .card-body {
+                padding: 1rem;
+            }
+        }
+        
+        .stat-card h4 {
+            font-size: 1.5rem;
+            margin-bottom: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .stat-card h4 {
+                font-size: 1.2rem;
+            }
+        }
+        
+        .stat-card h5 {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        @media (max-width: 768px) {
+            .stat-card h5 {
+                font-size: 0.9rem;
+            }
+        }
+        
+        .stat-card .fs-1 {
+            font-size: 2.5rem !important;
+        }
+        
+        @media (max-width: 768px) {
+            .stat-card .fs-1 {
+                font-size: 2rem !important;
+            }
+        }
+        
+        .profit-positive { 
+            color: #28a745; 
+            font-weight: bold; 
+        }
+        
+        .profit-negative { 
+            color: #dc3545; 
+            font-weight: bold; 
+        }
+        
+        .profit-zero { 
+            color: #6c757d; 
+            font-weight: bold; 
+        }
+        
+        .progress-bar { 
+            transition: width 1s ease-in-out; 
+            border-radius: 10px;
+        }
+        
+        .progress {
+            height: 8px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.2);
+        }
+        
+        /* 导航栏优化 */
+        .navbar {
+            backdrop-filter: blur(10px);
+            background: rgba(0,0,0,0.8) !important;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .navbar-brand {
+                font-size: 1.1rem;
+            }
+        }
+        
+        .nav-link {
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            margin: 0 2px;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-link {
+                font-size: 0.9rem;
+                padding: 0.4rem 0.6rem;
+            }
+        }
+        
+        .nav-link:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-1px);
+        }
+        
+        .nav-link.active {
+            background: rgba(102, 126, 234, 0.3);
+            color: white !important;
+        }
+        
+        /* 容器优化 */
+        .container {
+            max-width: 1200px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+        }
+        
+        /* 卡片头部 */
+        .card-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            border-radius: 15px 15px 0 0 !important;
+            font-weight: 600;
+        }
+        
+        @media (max-width: 768px) {
+            .card-header {
+                border-radius: 12px 12px 0 0 !important;
+                padding: 1rem;
+            }
+        }
+        
+        .card-header h6 {
+            margin: 0;
+            color: #495057;
+        }
+        
+        @media (max-width: 768px) {
+            .card-header h6 {
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* 卡片主体 */
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .card-body {
+                padding: 1rem;
+            }
+        }
+        
+        /* 数据展示 */
+        .d-flex.justify-content-between {
+            margin-bottom: 0.75rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .d-flex.justify-content-between:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .d-flex.justify-content-between {
+                font-size: 0.9rem;
+                padding: 0.4rem 0;
+            }
+        }
+        
+        /* 徽章优化 */
+        .badge {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        
+        @media (max-width: 768px) {
+            .badge {
+                font-size: 0.7rem;
+                padding: 0.3rem 0.6rem;
+            }
+        }
+        
+        /* 按钮优化 */
+        .btn {
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+        }
+        
+        .btn-lg {
+            padding: 1rem 1.5rem;
+            font-size: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .btn-lg {
+                padding: 0.8rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            box-shadow: 0 4px 15px rgba(23, 162, 184, 0.3);
+        }
+        
+        .btn-info:hover {
+            background: linear-gradient(135deg, #138496 0%, #0f6674 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(23, 162, 184, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+            color: #212529;
+        }
+        
+        .btn-warning:hover {
+            background: linear-gradient(135deg, #e0a800 0%, #dc6500 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
+            color: #212529;
+        }
+        
+        /* 响应式网格 */
+        @media (max-width: 768px) {
+            .row {
+                margin-left: -0.5rem;
+                margin-right: -0.5rem;
+            }
+            
+            .col-md-3, .col-md-6, .col-lg-6 {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+        }
+        
+        /* 空状态优化 */
+        .text-center.py-4 {
+            padding: 2rem 1rem !important;
+        }
+        
+        .text-center.py-4 .fs-1 {
+            font-size: 3rem !important;
+            opacity: 0.5;
+        }
+        
+        @media (max-width: 768px) {
+            .text-center.py-4 .fs-1 {
+                font-size: 2rem !important;
+            }
+        }
+        
+        /* 风险提示卡片 */
+        .card-header.bg-warning {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%) !important;
+            border-bottom: 1px solid rgba(255, 193, 7, 0.3);
+        }
+        
+        .list-unstyled li {
+            padding: 0.25rem 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .list-unstyled li i {
+            margin-right: 0.5rem;
+            flex-shrink: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .list-unstyled li {
+                font-size: 0.8rem;
+            }
+        }
+        
+        /* 动画效果 */
+        .card {
+            animation: fadeInUp 0.6s ease-out;
+            animation-fill-mode: both;
+        }
+        
+        .card:nth-child(1) { animation-delay: 0.1s; }
+        .card:nth-child(2) { animation-delay: 0.2s; }
+        .card:nth-child(3) { animation-delay: 0.3s; }
+        .card:nth-child(4) { animation-delay: 0.4s; }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.5);
+        }
+        
+        /* 加载状态 */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 触摸优化 */
+        @media (hover: none) and (pointer: coarse) {
+            .card:hover {
+                transform: none;
+                box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            }
+            
+            .btn:hover {
+                transform: none;
+                box-shadow: initial;
+            }
+        }
+        
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="bi bi-trophy-fill"></i> 足球预测系统
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="{{ url_for('index') }}">
+                        <i class="bi bi-house"></i> 首页
+                    </a>
+                    <a class="nav-link" href="{{ url_for('betting_center') }}">
+                        <i class="bi bi-cash-coin"></i> 投注中心
+                    </a>
+                    <a class="nav-link" href="{{ url_for('betting_records') }}">
+                        <i class="bi bi-list-check"></i> 投注记录
+                    </a>
+                    <a class="nav-link active" href="{{ url_for('wallet') }}">
+                        <i class="bi bi-wallet2"></i> 钱包
+                    </a>
+                    <a class="nav-link" href="{{ url_for('profile') }}">
+                        <i class="bi bi-person"></i> 个人中心
+                    </a>
+                    <a class="nav-link" href="{{ url_for('logout') }}" onclick="return confirm('确定要退出吗？')">
+                        <i class="bi bi-door-open"></i> 退出
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 钱包主要信息 -->
+    <div class="wallet-hero">
+        <div class="container text-center">
+            <h1><i class="bi bi-wallet2"></i> 我的钱包</h1>
+            <div class="balance-display">¥{{ "%.2f"|format(wallet.balance) if wallet else "0.00" }}</div>
+            <p class="lead">可用余额</p>
+            
+            <div class="row mt-4">
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="card stat-card text-white">
+                        <div class="card-body text-center">
+                            <i class="bi bi-graph-up fs-1"></i>
+                            <h5 class="mt-2">总投注</h5>
+                            <h4>¥{{ "%.2f"|format(wallet.total_bet) if wallet and wallet.total_bet else "0.00" }}</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="card stat-card text-white">
+                        <div class="card-body text-center">
+                            <i class="bi bi-trophy fs-1"></i>
+                            <h5 class="mt-2">总盈利</h5>
+                            <h4>¥{{ "%.2f"|format(wallet.total_win) if wallet and wallet.total_win else "0.00" }}</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="card stat-card text-white">
+                        <div class="card-body text-center">
+                            <i class="bi bi-x-circle fs-1"></i>
+                            <h5 class="mt-2">总亏损</h5>
+                            <h4>¥{{ "%.2f"|format(wallet.total_loss) if wallet and wallet.total_loss else "0.00" }}</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="card stat-card text-white">
+                        <div class="card-body text-center">
+                            <i class="bi bi-calculator fs-1"></i>
+                            <h5 class="mt-2">净盈亏</h5>
+                            {% set net_profit = (wallet.total_win or 0) - (wallet.total_loss or 0) %}
+                            <h4 class="{% if net_profit > 0 %}text-success{% elif net_profit < 0 %}text-danger{% else %}text-muted{% endif %}">
+                                {% if net_profit > 0 %}+{% endif %}¥{{ "%.2f"|format(net_profit) }}
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <div class="row">
+            <!-- 投注分析 -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-pie-chart"></i> 投注分析</h6>
+                    </div>
+                    <div class="card-body">
+                        {% if stats.total_bets and stats.total_bets > 0 %}
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>胜率</span>
+                                    <span><strong>{{ stats.win_rate or 0 }}%</strong></span>
+                                </div>
+                                <div class="progress mt-1">
+                                    <div class="progress-bar bg-success" style="width: {{ stats.win_rate or 0 }}%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>投注次数</span>
+                                    <span><strong>{{ stats.total_bets }}</strong> 次</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>已结算</span>
+                                    <span><strong>{{ stats.settled_bets or 0 }}</strong> 次</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>中奖次数</span>
+                                    <span class="text-success"><strong>{{ stats.win_bets or 0 }}</strong> 次</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>未中奖次数</span>
+                                    <span class="text-danger"><strong>{{ stats.lose_bets or 0 }}</strong> 次</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>平均赔率</span>
+                                    <span><strong>{{ "%.2f"|format(stats.avg_odds or 0) }}</strong></span>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="bi bi-graph-up fs-1 text-muted"></i>
+                                <p class="text-muted mt-2">暂无投注数据</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- 收益分析 -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-graph-up-arrow"></i> 收益分析</h6>
+                    </div>
+                    <div class="card-body">
+                        {% if stats.total_bet_amount and stats.total_bet_amount > 0 %}
+                            {% set total_invested = stats.total_bet_amount %}
+                            {% set total_returned = stats.total_win_amount or 0 %}
+                            {% set net_profit = total_returned - total_invested %}
+                            {% set roi = (net_profit / total_invested * 100) if total_invested > 0 else 0 %}
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>总投入</span>
+                                    <span><strong>¥{{ "%.2f"|format(total_invested) }}</strong></span>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>总收益</span>
+                                    <span><strong>¥{{ "%.2f"|format(total_returned) }}</strong></span>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>净盈亏</span>
+                                    <span class="{% if net_profit > 0 %}profit-positive{% elif net_profit < 0 %}profit-negative{% else %}profit-zero{% endif %}">
+                                        {% if net_profit > 0 %}+{% endif %}¥{{ "%.2f"|format(net_profit) }}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>投资回报率 (ROI)</span>
+                                    <span class="{% if roi > 0 %}profit-positive{% elif roi < 0 %}profit-negative{% else %}profit-zero{% endif %}">
+                                        {% if roi > 0 %}+{% endif %}{{ "%.2f"|format(roi) }}%
+                                    </span>
+                                </div>
+                                <div class="progress mt-1">
+                                    {% set abs_roi = roi if roi >= 0 else (0 - roi) %}
+                                    {% set progress_width = abs_roi if abs_roi <= 100 else 100 %}
+                                    <div class="progress-bar {% if roi > 0 %}bg-success{% elif roi < 0 %}bg-danger{% else %}bg-secondary{% endif %}" 
+                                         style="width: {{ progress_width }}%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>收益率分析</span>
+                                    <span>
+                                        {% if roi > 10 %}
+                                            <span class="badge bg-success">优秀</span>
+                                        {% elif roi > 0 %}
+                                            <span class="badge bg-info">良好</span>
+                                        {% elif roi == 0 %}
+                                            <span class="badge bg-secondary">持平</span>
+                                        {% elif roi > -10 %}
+                                            <span class="badge bg-warning">需改进</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">高风险</span>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="bi bi-cash-stack fs-1 text-muted"></i>
+                                <p class="text-muted mt-2">暂无收益数据</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 快速操作 -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-lightning"></i> 快速操作</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3 col-6 mb-3">
+                        <a href="{{ url_for('betting_center') }}" class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-cash-coin"></i><br>
+                            立即投注
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <a href="{{ url_for('betting_records') }}" class="btn btn-info btn-lg w-100">
+                            <i class="bi bi-list-check"></i><br>
+                            查看记录
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <button class="btn btn-success btn-lg w-100" onclick="showComingSoon('充值')">
+                            <i class="bi bi-plus-circle"></i><br>
+                            账户充值
+                        </button>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <button class="btn btn-warning btn-lg w-100" onclick="showComingSoon('提现')">
+                            <i class="bi bi-arrow-down-circle"></i><br>
+                            账户提现
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 风险提示 -->
+        <div class="card mt-4">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="mb-0"><i class="bi bi-exclamation-triangle"></i> 风险提示</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <h6>理性投注提醒</h6>
+                        <ul class="list-unstyled small">
+                            <li><i class="bi bi-check-circle text-success"></i> 投注有风险，请理性参与</li>
+                            <li><i class="bi bi-check-circle text-success"></i> 不要将投注作为主要收入来源</li>
+                            <li><i class="bi bi-check-circle text-success"></i> 设定合理的投注预算和止损线</li>
+                            <li><i class="bi bi-check-circle text-success"></i> 保持冷静的分析和判断</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>资金管理建议</h6>
+                        <ul class="list-unstyled small">
+                            <li><i class="bi bi-info-circle text-info"></i> 单次投注金额不超过总资金的5%</li>
+                            <li><i class="bi bi-info-circle text-info"></i> 连续亏损时应降低投注金额</li>
+                            <li><i class="bi bi-info-circle text-info"></i> 定期审视投注策略和效果</li>
+                            <li><i class="bi bi-info-circle text-info"></i> 盈利时及时提取部分资金</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script>
+        // 动画效果
+        document.addEventListener('DOMContentLoaded', function() {
+            // 进度条动画
+            const progressBars = document.querySelectorAll('.progress-bar');
+            progressBars.forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 500);
+            });
+        });
+        
+        // 即将推出提示
+        function showComingSoon(feature) {
+            alert(`${feature}功能即将推出，敬请期待！`);
+        }
+        
+        // 响应式导航栏
+        document.addEventListener('DOMContentLoaded', function() {
+            const navbarToggler = document.querySelector('.navbar-toggler');
+            const navbarCollapse = document.querySelector('.navbar-collapse');
+            
+            if (navbarToggler) {
+                navbarToggler.addEventListener('click', function() {
+                    navbarCollapse.classList.toggle('show');
+                });
+            }
+        });
+    </script>
+</body>
+</html> 

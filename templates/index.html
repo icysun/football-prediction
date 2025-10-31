@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>老段足球预测平台 3.0</title>
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-icons.css') }}">
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --primary-light: #60a5fa;
+            --primary-dark: #2563eb;
+            --secondary-color: #64748b;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --background-color: #f4f7fc;
+            --card-background: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --hover-bg: #f9fafb;
+            --gradient-start: #3b82f6;
+            --gradient-end: #06b6d4;
+            --ml-gradient: linear-gradient(135deg, #3b82f6, #60a5fa);
+            --dl-gradient: linear-gradient(135deg, #06b6d4, #0ea5e9);
+            --border-radius: 0.75rem;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --main-max-width: 1400px;
+            --main-gap: 1rem;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        /* 移动端优化 */
+        @media (max-width: 768px) {
+            :root {
+                --main-gap: 0.75rem;
+                --border-radius: 0.5rem;
+            }
+            
+            body {
+                font-size: 13px;
+            }
+        }
+        
+        .main-header {
+            background: var(--card-background);
+            padding: 1rem;
+            margin-bottom: var(--main-gap);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .main-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .main-title {
+                font-size: 1.5rem;
+                margin-bottom: 0.75rem;
+            }
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        @media (max-width: 768px) {
+            .user-info {
+                flex-direction: column;
+                gap: 0.5rem;
+                text-align: center;
+            }
+        }
+        
+        .welcome-section {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+        
+        @media (max-width: 768px) {
+            .welcome-section {
+                justify-content: center;
+                width: 100%;
+            }
+        }
+        
+        .welcome-text {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        @media (max-width: 768px) {
+            .welcome-text {
+                font-size: 0.8rem;
+            }
+        }
+        
+        .membership-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        
+        @media (max-width: 768px) {
+            .membership-badge {
+                padding: 0.25rem 0.6rem;
+                font-size: 0.7rem;
+            }
+        }
+        
+        .membership-level-1 {
+            background: rgba(33, 150, 243, 0.2);
+            color: #2196f3;
+            border: 1px solid rgba(33, 150, 243, 0.3);
+        }
+        
+        .membership-level-2 {
+            background: rgba(156, 39, 176, 0.2);
+            color: #9c27b0;
+            border: 1px solid rgba(156, 39, 176, 0.3);
+        }
+        
+        .membership-level-3 {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-buttons {
+                justify-content: center;
+                width: 100%;
+                gap: 0.3rem;
+            }
+        }
+        
+        .btn-outline {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: 2px solid #667eea;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        @media (max-width: 768px) {
+            .btn-outline {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.75rem;
+                flex: 1;
+                min-width: 0;
+            }
+        }
+        
+        .btn-outline:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+            border-color: #5a67d8;
+            color: white;
+            text-decoration: none;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-outline.btn-betting {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            border-color: #48bb78;
+            animation: pulse-betting 2s infinite;
+        }
+
+        .btn-outline.btn-betting:hover {
+            background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+            border-color: #38a169;
+        }
+
+        .btn-outline.btn-logout {
+            background: linear-gradient(135deg, #fc8181 0%, #e53e3e 100%);
+            border-color: #fc8181;
+        }
+
+        .btn-outline.btn-logout:hover {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+            border-color: #e53e3e;
+        }
+
+        @keyframes pulse-betting {
+            0%, 100% { box-shadow: 0 4px 8px rgba(72, 187, 120, 0.3); }
+            50% { box-shadow: 0 6px 15px rgba(72, 187, 120, 0.5); }
+        }
+
+        /* --- Custom Button Styles --- */
+        .btn-primary-soft, .btn-secondary-soft {
+            border-color: transparent;
+            transition: all 0.3s ease;
+        }
+        .btn-primary-soft {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--primary-color);
+        }
+        .btn-primary-soft:hover {
+            background-color: rgba(59, 130, 246, 0.2);
+            color: var(--primary-dark);
+        }
+        .btn-secondary-soft {
+            background-color: rgba(100, 116, 139, 0.1);
+            color: var(--secondary-color);
+        }
+        .btn-secondary-soft:hover {
+            background-color: rgba(100, 116, 139, 0.2);
+            color: #1e293b;
+        }
+        
+        @keyframes pulse-refresh {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+            }
+            50% {
+                transform: scale(1.03);
+                box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+            }
+        }
+
+        .btn-refresh-special {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+            color: white;
+            border: none;
+            transition: all 0.3s ease;
+            animation: pulse-refresh 2.5s infinite;
+            font-weight: 600;
+            padding-left: 1.25rem;
+            padding-right: 1.25rem;
+        }
+
+        .btn-refresh-special:hover {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
+            color: white;
+            transform: translateY(-2px);
+        }
+        /* --- End Custom Button Styles --- */
+        
+        .main-container {
+            max-width: var(--main-max-width);
+            margin: 0 auto;
+            padding: 0 var(--main-gap);
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 0 0.5rem;
+            }
+        }
+        
+        .section-card {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: var(--main-gap);
+            padding: 1.5rem;
+            transition: box-shadow 0.3s ease-in-out;
+        }
+        
+        @media (max-width: 768px) {
+            .section-card {
+                padding: 1rem;
+                margin-bottom: 0.75rem;
+            }
+        }
+        
+        .section-card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .section-title {
+                font-size: 1.1rem;
+                margin-bottom: 1rem;
+                padding-bottom: 0.5rem;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        .recommendation-card {
+            background: linear-gradient(105deg, var(--primary-dark), var(--gradient-end));
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            color: white;
+            padding: 1.5rem;
+            display: flex;
+            gap: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .recommendation-card {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+            }
+        }
+
+        .recommendation-column { 
+            flex: 1; 
+        }
+        
+        .recommendation-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 0.75rem;
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .recommendation-title {
+                font-size: 0.9rem;
+                margin-bottom: 0.5rem;
+                padding-bottom: 0.5rem;
+            }
+        }
+        
+        .recommendation-list { 
+            list-style: none; 
+            padding: 0; 
+            margin: 0; 
+        }
+        
+        .recommendation-list li {
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .recommendation-list li {
+                padding: 0.4rem 0;
+                font-size: 0.8rem;
+            }
+        }
+        
+        .recommendation-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .recommendation-list strong {
+            color: white;
+            font-weight: 600;
+        }
+        
+        .recommendation-list .win, .recommendation-list .draw, .recommendation-list .lose {
+            font-weight: bold;
+        }
+
+        .table-container {
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .prediction-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+            background-color: var(--card-background);
+            min-width: 800px;
+        }
+        
+        @media (max-width: 768px) {
+            .prediction-table {
+                font-size: 0.75rem;
+                min-width: 700px;
+            }
+        }
+
+        .prediction-table th, .prediction-table td {
+            padding: 0.85rem 0.5rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+        
+        @media (max-width: 768px) {
+            .prediction-table th, .prediction-table td {
+                padding: 0.6rem 0.3rem;
+            }
+        }
+
+        .prediction-table thead th {
+            background: #fcfdff;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.75rem;
+            border-bottom: 2px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        @media (max-width: 768px) {
+            .prediction-table thead th {
+                font-size: 0.65rem;
+                padding: 0.5rem 0.2rem;
+            }
+        }
+
+        .prediction-table tbody tr:hover {
+            background-color: var(--hover-bg);
+        }
+
+        #today-prediction-table .dl-row td {
+            border-bottom: 2px solid #dde7f5;
+        }
+        
+        #history-table tbody tr:nth-child(odd) {
+            background-color: #fcfdff;
+        }
+
+        .team-cell { 
+            text-align: center; 
+            font-weight: 600; 
+            white-space: normal;
+            max-width: 120px;
+            word-wrap: break-word;
+        }
+        
+        @media (max-width: 768px) {
+            .team-cell {
+                max-width: 80px;
+                font-size: 0.7rem;
+            }
+        }
+        
+        .win { color: var(--success-color); }
+        .draw { color: var(--warning-color); }
+        .lose { color: var(--danger-color); }
+        .check { color: var(--success-color); font-size: 1.25rem; }
+        .cross { color: var(--danger-color); font-size: 1.25rem; }
+
+        .model-tag {
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.8rem;
+            display: inline-block;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .model-tag {
+                padding: 0.2rem 0.4rem;
+                font-size: 0.7rem;
+            }
+        }
+        
+        .ml-tag { background: var(--ml-gradient); }
+        .dl-tag { background: var(--dl-gradient); }
+        
+        .accuracy-stats {
+            padding: 1.25rem;
+            background: linear-gradient(90deg, #f0f9ff, #e0f2fe);
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 500;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .accuracy-stats {
+                padding: 1rem;
+                font-size: 0.85rem;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+        
+        .accuracy-stats span { 
+            margin: 0 0.5rem; 
+        }
+        
+        @media (max-width: 768px) {
+            .accuracy-stats span {
+                margin: 0;
+                display: block;
+            }
+        }
+        
+        .accuracy-stats strong { 
+            color: var(--primary-dark);
+            font-size: 1.2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .accuracy-stats strong {
+                font-size: 1.1rem;
+            }
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        @media (max-width: 768px) {
+            .action-buttons {
+                justify-content: center;
+                gap: 0.5rem;
+                width: 100%;
+            }
+        }
+        
+        #updateResultsBtn, #updatePredictionsBtn, #exportPredictionsBtn {
+            font-size: 0.875rem;
+            background-color: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            white-space: nowrap;
+        }
+        
+        @media (max-width: 768px) {
+            #updateResultsBtn, #updatePredictionsBtn, #exportPredictionsBtn {
+                font-size: 0.75rem;
+                padding: 0.4rem 0.8rem;
+                flex: 1;
+                min-width: 0;
+            }
+        }
+
+        #updateResultsBtn:hover, #updatePredictionsBtn:hover, #exportPredictionsBtn:hover {
+            background-color: var(--primary-color);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+
+        #updateResultsBtn:disabled, #updatePredictionsBtn:disabled, #exportPredictionsBtn:disabled {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            color: white;
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        #history-table .actual-result {
+            font-weight: 700;
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 2s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* AI分析按钮样式 */
+        .ai-analysis-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+            min-width: 80px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        @media (max-width: 768px) {
+            .ai-analysis-btn {
+                font-size: 0.65rem;
+                padding: 0.3rem 0.6rem;
+                min-width: 60px;
+            }
+        }
+
+        .ai-analysis-btn:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        .ai-analysis-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+        }
+
+        .ai-analysis-btn:disabled {
+            background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .ai-analysis-btn::before {
+            content: '🤖';
+            margin-right: 4px;
+            font-size: 0.7rem;
+        }
+
+        .ai-analysis-btn.analyzing::before {
+            content: '⚡';
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* AI分析结果展示 */
+        .ai-result-container {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border: 1px solid #cbd5e0;
+            border-radius: 12px;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            max-width: 200px;
+            position: relative;
+        }
+        
+        @media (max-width: 768px) {
+            .ai-result-container {
+                max-width: 150px;
+                padding: 0.5rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        .ai-result-container::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-bottom: 6px solid #cbd5e0;
+        }
+
+        .ai-result-container::after {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-bottom: 5px solid #f8fafc;
+        }
+
+        .ai-prediction {
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 0.3rem;
+            text-align: center;
+            padding: 0.3rem 0.5rem;
+            border-radius: 8px;
+            background: white;
+            border: 1px solid #e2e8f0;
+        }
+        
+        @media (max-width: 768px) {
+            .ai-prediction {
+                font-size: 0.8rem;
+                padding: 0.2rem 0.3rem;
+            }
+        }
+
+        .ai-prediction.win { 
+            color: var(--success-color); 
+            background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+            border-color: var(--success-color);
+        }
+        .ai-prediction.draw { 
+            color: var(--warning-color); 
+            background: linear-gradient(135deg, #fffdf0 0%, #fef3c7 100%);
+            border-color: var(--warning-color);
+        }
+        .ai-prediction.lose { 
+            color: var(--danger-color); 
+            background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
+            border-color: var(--danger-color);
+        }
+
+        .ai-win-rate {
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: var(--primary-dark);
+            text-align: center;
+            margin-bottom: 0.3rem;
+            background: white;
+            padding: 0.2rem 0.4rem;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        @media (max-width: 768px) {
+            .ai-win-rate {
+                font-size: 0.7rem;
+                padding: 0.15rem 0.3rem;
+            }
+        }
+
+        .ai-reason {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            line-height: 1.3;
+            text-align: center;
+            background: white;
+            padding: 0.3rem 0.4rem;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        
+        @media (max-width: 768px) {
+            .ai-reason {
+                font-size: 0.6rem;
+                padding: 0.2rem 0.3rem;
+            }
+        }
+
+        /* 表格AI分析列宽度调整 */
+        .prediction-table th:last-child,
+        .prediction-table td:last-child {
+            width: 220px;
+            min-width: 220px;
+            max-width: 220px;
+            white-space: normal;
+        }
+        
+        @media (max-width: 768px) {
+            .prediction-table th:last-child,
+            .prediction-table td:last-child {
+                width: 150px;
+                min-width: 150px;
+                max-width: 150px;
+            }
+        }
+
+        /* 滚动条美化 */
+        .table-container::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        /* 加载状态优化 */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(2px);
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="main-container">
+            <h1 class="main-title">⚽ 老段足球预测平台 3.0</h1>
+            <div class="user-info">
+                <div class="welcome-section">
+                    <span class="welcome-text">欢迎，{{ user_info.username }}！</span>
+                    <span class="membership-badge membership-level-{{ user_info.membership_level }}">
+                        {{ user_info.membership_name }}
+                    </span>
+                </div>
+                <div class="nav-buttons">
+                    <a href="{{ url_for('profile') }}" class="btn-outline">
+                        <i class="bi bi-person-circle"></i> 个人中心
+                    </a>
+                    <a href="{{ url_for('betting_center') }}" class="btn-outline btn-betting">
+                        <i class="bi bi-cash-coin"></i> 投注中心
+                    </a>
+                    <a href="{{ url_for('betting_records') }}" class="btn-outline">
+                        <i class="bi bi-list-check"></i> 投注记录
+                    </a>
+                    <a href="{{ url_for('wallet') }}" class="btn-outline">
+                        <i class="bi bi-wallet2"></i> 我的钱包
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="btn-outline btn-logout" 
+                       onclick="return confirm('确定要退出登录吗？')">
+                        <i class="bi bi-box-arrow-right"></i> 退出
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        
+        <!-- Recommendation Section -->
+        <section class="section-card">
+            <div class="recommendation-card">
+                <div class="recommendation-column">
+                    <h3 class="recommendation-title">老段今日推荐</h3>
+                    {% if win_loss_recommendations %}
+                        <ul class="recommendation-list">
+                        {% for p in win_loss_recommendations %}
+                            {# Find the corresponding goal recommendation for this match #}
+                            {% set goal_rec = goals_recommendations | selectattr('match_id', 'equalto', p.match_id) | first %}
+                            <li>
+                                <span>{{ p.match_id }} {{ p.home_team }} vs {{ p.away_team }}</span> - 
+                                <strong>
+                                    {% if p.ml_prediction == 'win' %}主胜
+                                    {% elif p.ml_prediction == 'draw' %}平局
+                                    {% else %}主负
+                                    {% endif %}
+                                </strong>
+                                {% if goal_rec %}
+                                    <span style="opacity: 0.8; font-size: 0.9em; margin-left: 5px;">({{ goal_rec.ml_total_goals_range }} 球)</span>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                    <p style="opacity: 0.7;">今日暂无胜平负一致推荐。</p>
+                    {% endif %}
+                </div>
+                <div class="recommendation-column">
+                    <h3 class="recommendation-title">一致看好总进球数</h3>
+                    {# Filter this list to only include matches NOT in the first list #}
+                    {% set filtered_goals_recs = goals_recommendations | rejectattr('match_id', 'in', win_loss_match_ids) | list %}
+                    {% if filtered_goals_recs %}
+                        <ul class="recommendation-list">
+                        {% for p in filtered_goals_recs %}
+                            <li>
+                                <span>{{ p.match_id }} {{ p.home_team }} vs {{ p.away_team }}</span> - 
+                                <strong>({{ p.ml_total_goals_range }} 球)</strong>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        {% if goals_recommendations %}
+                            <p style="opacity: 0.7;">所有总进球推荐已在左侧显示。</p>
+                        {% else %}
+                            <p style="opacity: 0.7;">模型暂无总进球一致推荐。</p>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Today's Predictions -->
+        {% if membership_level >= 2 %}
+        <section class="section-card">
+            <div class="row mb-4 align-items-center">
+                <div class="col-md-6">
+                    <h2 class="section-title mb-1">今日预测</h2>
+                    <p class="text-muted small">
+                        截止时间：{{ today_predictions[0].match_date ~ ' ' ~ today_predictions[0].match_time if today_predictions else 'N/A' }}
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end d-flex justify-content-md-end align-items-center" style="gap: 0.75rem;">
+                    <form action="{{ url_for('update_predictions') }}" method="POST" class="d-inline" id="update-predictions-form">
+                        <button type="submit" class="btn btn-refresh-special" id="update-predictions-btn">
+                            <i class="bi bi-arrow-clockwise"></i> 刷新预测
+                        </button>
+                    </form>
+                    {% if membership_level >= 3 %}
+                    <a href="{{ url_for('export_predictions') }}" class="btn btn-secondary-soft">
+                        <i class="bi bi-download"></i> 导出数据
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="prediction-table" id="today-prediction-table">
+                    <thead>
+                        <tr>
+                            <th>比赛编号</th>
+                            {% if membership_level >= 3 %}<th>真实ID</th>{% endif %}
+                            <th>联赛</th>
+                            <th>时间</th>
+                            <th>对阵</th>
+                            <th>模型</th>
+                            <th>胜/平/负</th>
+                            <th>概率 (胜/平/负)</th>
+                            <th>比分</th>
+                            <th>总球数</th>
+                            {% if membership_level >= 3 %}<th>AI分析</th>{% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in today_predictions %}
+                        <tr class="ml-row">
+                            <td rowspan="{{ 2 }}">{{ p.match_id }}</td>
+                            {% if membership_level >= 3 %}
+                                <td rowspan="{{ 2 }}" style="font-size: 0.8rem; color: #666;">{{ p.real_match_id or 'N/A' }}</td>
+                            {% endif %}
+                            <td rowspan="{{ 2 }}">{{ p.league }}</td>
+                            <td rowspan="{{ 2 }}">{{ p.match_time }}</td>
+                            <td rowspan="{{ 2 }}" class="team-cell">{{ p.home_team }}<br>vs<br>{{ p.away_team }}</td>
+                            <td><span class="model-tag ml-tag">ML</span></td>
+                            <td><strong class="{{ p.ml_prediction | lower }}">{{ p.ml_prediction }}</strong></td>
+                            <td>{{ "%.1f%% / %.1f%% / %.1f%%" % (p.ml_win_prob * 100, p.ml_draw_prob * 100, p.ml_lose_prob * 100) }}</td>
+                            <td>{{ p.ml_predicted_score }}</td>
+                            <td>{{ p.ml_total_goals_range }}</td>
+                            {% if membership_level >= 3 %}
+                            <td rowspan="{{ 2 }}" style="text-align: center; vertical-align: middle; padding: 1rem 0.5rem;">
+                                {% if p.ai_prediction %}
+                                    <!-- 已有AI预测结果，直接显示 -->
+                                    <div class="ai-result-container">
+                                        <div class="ai-prediction {{ p.ai_prediction | lower }}">
+                                            {% if p.ai_prediction == '胜' %}主胜
+                                            {% elif p.ai_prediction == '负' %}主负
+                                            {% elif p.ai_prediction == '平' %}平局
+                                            {% else %}{{ p.ai_prediction }}
+                                            {% endif %}
+                                        </div>
+                                        <div class="ai-win-rate">胜率: {{ p.ai_win_rate or '50' }}%</div>
+                                        <div class="ai-reason">{{ p.ai_reason or '暂无分析理由' }}</div>
+                                    </div>
+                                {% else %}
+                                    <!-- 没有AI预测结果，显示分析按钮 -->
+                                    <button class="ai-analysis-btn" 
+                                            data-match-id="{{ p.match_id }}" 
+                                            data-real-id="{{ p.real_match_id or p.match_id }}"
+                                            data-home="{{ p.home_team }}" 
+                                            data-away="{{ p.away_team }}">
+                                        AI分析
+                                    </button>
+                                    <div class="ai-result-{{ p.match_id }}" style="display: none;">
+                                        <div class="ai-result-container">
+                                            <div class="ai-prediction"></div>
+                                            <div class="ai-win-rate"></div>
+                                            <div class="ai-reason"></div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            {% endif %}
+                        </tr>
+                        <tr class="dl-row">
+                            <td><span class="model-tag dl-tag">DL</span></td>
+                            <td><strong class="{{ p.dl_prediction | lower }}">{{ p.dl_prediction }}</strong></td>
+                            <td>{{ "%.1f%% / %.1f%% / %.1f%%" % (p.dl_win_prob * 100, p.dl_draw_prob * 100, p.dl_lose_prob * 100) }}</td>
+                            <td>{{ p.dl_predicted_score }}</td>
+                            <td>{{ p.dl_total_goals_range }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="{% if membership_level >= 3 %}11{% else %}9{% endif %}" style="text-align: center; padding: 2rem;">今日暂无预测数据</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section 3: 历史验证预测模块 -->
+        <section class="section-card">
+            <div class="section-title">
+                <h2 style="font-size: inherit; margin: 0; padding: 0; border: none;">历史预测验证</h2>
+            </div>
+            
+            <div class="accuracy-stats">
+            
+                <span>总计: <strong>{{ accuracy_stats.total_matches }}</strong> 场</span> |
+                <span>机器学习 准确率: <strong>{{ accuracy_stats.ml_accuracy }}%</strong></span> |
+                <span>深度学习 准确率: <strong>{{ accuracy_stats.dl_accuracy }}%</strong></span>
+                {% if accuracy_stats.ai_accuracy is defined %}
+                | <span>AI分析 准确率: <strong>{{ accuracy_stats.ai_accuracy }}%</strong></span>
+                {% endif %}
+            </div>
+            
+            {% if accuracy_stats.ml_score_accuracy is defined %}
+            <div class="accuracy-stats" style="margin-top: 1rem; padding: 0.8rem; background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%); border-radius: 8px; border-left: 4px solid #2196f3;">
+                <span>比分预测准确率 - ML: <strong>{{ accuracy_stats.ml_score_accuracy }}%</strong></span> |
+                <span>DL: <strong>{{ accuracy_stats.dl_score_accuracy }}%</strong></span> |
+                <span>总进球预测准确率 - ML: <strong>{{ accuracy_stats.ml_goals_accuracy }}%</strong></span> |
+                <span>DL: <strong>{{ accuracy_stats.dl_goals_accuracy }}%</strong></span>
+            </div>
+            {% endif %}
+            
+            <!-- 昨天在售比赛准确率统计 -->
+            {% if yesterday_accuracy_stats and yesterday_accuracy_stats.total_matches > 0 %}
+            <div class="accuracy-stats" style="margin-top: 1rem; padding: 0.8rem; background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%); border-radius: 8px; border-left: 4px solid #2196f3;">
+                <div>昨天比赛预测准确率</div>
+                <span>总计: <strong>{{ yesterday_accuracy_stats.total_matches }}</strong> 场</span> |
+                <span>机器学习 准确率: <strong>{{ yesterday_accuracy_stats.ml_accuracy }}%</strong></span> |
+                <span>深度学习 准确率: <strong>{{ yesterday_accuracy_stats.dl_accuracy }}%</strong></span>
+                {% if yesterday_accuracy_stats.ai_accuracy is defined %}
+                | <span>AI分析 准确率: <strong>{{ yesterday_accuracy_stats.ai_accuracy }}%</strong></span>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="table-container">
+                <table class="prediction-table" id="history-table">
+                    <thead>
+                        <tr>
+                            <th>日期</th>
+                            <th>比赛编号</th>
+                            <th>对阵</th>
+                            <th>ML 预测</th>
+                            <th>DL 预测</th>
+                            <th>AI 预测</th>
+                            <th>实际比分</th>
+                            <th>最终赛果</th>
+                            <th>ML</th>
+                            <th>DL</th>
+                            <th>AI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in historical_predictions %}
+                        <tr>
+                            <td>{{ p.match_date }}</td>
+                            <td>{{ p.match_id }}</td>
+                            <td class="team-cell">{{ p.home_team }}<br>vs<br>{{ p.away_team }}</td>
+                            <td><strong class="{{ p.ml_prediction | lower }}">{{ p.ml_prediction }}</strong></td>
+                            <td><strong class="{{ p.dl_prediction | lower }}">{{ p.dl_prediction }}</strong></td>
+                            <td>
+                                {% if p.ai_prediction %}
+                                    <strong class="{{ p.ai_prediction | lower }}">{{ p.ai_prediction }}</strong>
+                                {% else %}
+                                    <span style="color: #999;">未分析</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if p.actual_score %}
+                                    <strong>{{ p.actual_score }}</strong>
+                                {% else %}
+                                    <span style="color: #999;">-</span>
+                                {% endif %}
+                            </td>
+                            <td><strong class="actual-result {{ p.actual_result | lower }}">{{ p.actual_result }}</strong></td>
+                            <td>
+                                {% if p.actual_result %}
+                                    {% set ml_correct = (
+                                        (p.ml_prediction == 'win' and p.actual_result == '胜') or
+                                        (p.ml_prediction == 'draw' and p.actual_result == '平') or
+                                        (p.ml_prediction == 'lose' and p.actual_result == '负')
+                                    ) %}
+                                    {% if ml_correct %}
+                                    <span class="check">✔️</span>
+                                    {% else %}
+                                    <span class="cross">❌</span>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if p.actual_result %}
+                                    {% set dl_correct = (
+                                        (p.dl_prediction == 'win' and p.actual_result == '胜') or
+                                        (p.dl_prediction == 'draw' and p.actual_result == '平') or
+                                        (p.dl_prediction == 'lose' and p.actual_result == '负')
+                                    ) %}
+                                    {% if dl_correct %}
+                                    <span class="check">✔️</span>
+                                    {% else %}
+                                    <span class="cross">❌</span>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if p.ai_prediction and p.actual_result %}
+                                    {% if p.ai_prediction == p.actual_result %}
+                                    <span class="check">✔️</span>
+                                    {% else %}
+                                        <span class="cross">❌</span>
+                                    {% endif %}
+                                {% elif p.actual_result %}
+                                    <span style="color: #999;">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="11" style="text-align: center; padding: 2rem;">暂无历史赛果数据</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {% else %}
+        <!-- 初级会员提示 -->
+        <section class="section-card">
+            <div class="section-title">
+                <span>会员升级提示</span>
+            </div>
+            <div style="text-align: center; padding: 3rem 1rem;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🔒</div>
+                <h3 style="color: #666; margin-bottom: 1rem;">您当前是初级会员</h3>
+                <p style="color: #999; margin-bottom: 2rem;">
+                    升级到中级会员可查看ML和DL预测数据<br>
+                    升级到高级会员可查看全部预测数据包括AI分析
+                </p>
+                <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; display: inline-block;">
+                    <strong>联系管理员升级会员</strong>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+    </main>
+
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // 更新按钮加载状态
+            const updateBtnForm = document.getElementById('update-predictions-form');
+            if (updateBtnForm) {
+                updateBtnForm.addEventListener('submit', function() {
+                    const updateBtn = document.getElementById('update-predictions-btn');
+                    if(updateBtn) {
+                        updateBtn.disabled = true;
+                        updateBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 正在刷新...';
+                    }
+                });
+            }
+
+            // AI分析按钮逻辑
+            document.querySelectorAll('.ai-analysis-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const matchId = this.dataset.matchId;
+                    const realId = this.dataset.realId;
+                    const resultContainer = document.querySelector(`.ai-result-${matchId}`);
+                    
+                    this.disabled = true;
+                    this.innerHTML = '分析中...';
+                    this.classList.add('analyzing');
+
+                    fetch(`/ai_analysis/${realId}`)
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then(err => { throw new Error(err.error || '分析失败，请稍后再试') });
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            const resultContainer = document.querySelector(`.ai-result-${matchId}`);
+                            const predictionDiv = resultContainer.querySelector('.ai-prediction');
+                            const winRateDiv = resultContainer.querySelector('.ai-win-rate');
+                            const reasonDiv = resultContainer.querySelector('.ai-reason');
+
+                            // 从 ai_analysis 对象中获取数据
+                            const analysis = data.ai_analysis;
+                            
+                            predictionDiv.textContent = analysis.prediction;
+                            predictionDiv.className = 'ai-prediction ' + (analysis.prediction_raw ? analysis.prediction_raw.toLowerCase() : 'unknown');
+                            winRateDiv.textContent = `胜率: ${analysis.win_rate || 'N/A'}%`;
+                            reasonDiv.textContent = analysis.reason || '暂无分析理由。';
+
+                            resultContainer.style.display = 'block';
+                            this.style.display = 'none'; // 隐藏按钮
+                        })
+                        .catch(error => {
+                            const reasonDiv = resultContainer.querySelector('.ai-reason');
+                            reasonDiv.textContent = '错误: ' + error.message;
+                            reasonDiv.style.color = 'red';
+                            
+                            resultContainer.querySelector('.ai-prediction').style.display = 'none';
+                            resultContainer.querySelector('.ai-win-rate').style.display = 'none';
+                            
+                            resultContainer.style.display = 'block';
+                            this.style.display = 'none'; // 隐藏按钮
+                        })
+                        .finally(() => {
+                            this.classList.remove('analyzing');
+                        });
+                });
+            });
+        });
+    </script>
+</body>
+</html>

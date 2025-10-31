@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>投注记录 - 足球预测</title>
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-icons.css') }}">
+    <style>
+        body { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        
+        .navbar-dark {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%) !important;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.4rem;
+        }
+        
+        .nav-link {
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border-radius: 20px;
+            margin: 0 5px;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white !important;
+        }
+
+        .container-fluid {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* 页面标题区域 */
+        .page-header {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .page-subtitle {
+            color: #718096;
+            font-size: 1.1rem;
+        }
+
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.12);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+
+        .stat-card.primary::before {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .stat-card.success::before {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
+        .stat-card.warning::before {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+        }
+
+        .stat-card.danger::before {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            margin-right: 15px;
+            opacity: 0.8;
+        }
+
+        .stat-icon.primary { color: #667eea; }
+        .stat-icon.success { color: #48bb78; }
+        .stat-icon.warning { color: #ed8936; }
+        .stat-icon.danger { color: #e53e3e; }
+
+        .stat-title {
+            font-size: 0.9rem;
+            color: #718096;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .stat-change {
+            font-size: 0.85rem;
+            color: #718096;
+        }
+
+        .stat-progress {
+            height: 6px;
+            background: #f7fafc;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .stat-progress-bar {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1s ease;
+        }
+
+        .stat-progress-bar.primary {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .stat-progress-bar.success {
+            background: linear-gradient(90deg, #48bb78, #38a169);
+        }
+
+        .stat-progress-bar.warning {
+            background: linear-gradient(90deg, #ed8936, #dd6b20);
+        }
+
+        /* 投注记录列表 */
+        .records-container {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .records-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .records-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .records-count {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .records-content {
+            padding: 0;
+        }
+
+        .record-item {
+            padding: 25px 30px;
+            border-bottom: 1px solid #f1f5f9;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .record-item:last-child {
+            border-bottom: none;
+        }
+
+        .record-item:hover {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            transform: translateX(5px);
+        }
+
+        .record-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .record-info {
+            flex: 1;
+        }
+
+        .record-match {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .record-details {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9rem;
+            color: #718096;
+            margin-bottom: 5px;
+        }
+
+        .record-bet {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .bet-type-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .bet-type-badge.win {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .bet-type-badge.draw {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .bet-type-badge.lose {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .record-amount {
+            text-align: right;
+        }
+
+        .amount-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .odds-value {
+            font-size: 0.9rem;
+            color: #718096;
+            margin-bottom: 5px;
+        }
+
+        .record-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 15px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .status-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-badge.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-badge.win {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-badge.lose {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .profit-display {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .profit-positive {
+            color: #48bb78;
+        }
+
+        .profit-negative {
+            color: #e53e3e;
+        }
+
+        .profit-zero {
+            color: #718096;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 30px;
+            color: #718096;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state h5 {
+            margin-bottom: 10px;
+            color: #4a5568;
+        }
+
+        /* 筛选和搜索 */
+        .filters {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #4a5568;
+            white-space: nowrap;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            font-size: 0.9rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .record-main {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .record-amount {
+                text-align: left;
+            }
+            
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-group {
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="bi bi-trophy-fill"></i> 足球预测系统
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('index') }}">
+                    <i class="bi bi-house"></i> 首页
+                </a>
+                <a class="nav-link" href="{{ url_for('betting_center') }}">
+                    <i class="bi bi-cash-coin"></i> 投注中心
+                </a>
+                <a class="nav-link active" href="{{ url_for('betting_records') }}">
+                    <i class="bi bi-list-check"></i> 投注记录
+                </a>
+                <a class="nav-link" href="{{ url_for('wallet') }}">
+                    <i class="bi bi-wallet2"></i> 钱包
+                </a>
+                <a class="nav-link" href="{{ url_for('profile') }}">
+                    <i class="bi bi-person"></i> 个人中心
+                </a>
+                <a class="nav-link" href="{{ url_for('logout') }}" onclick="return confirm('确定要退出吗？')">
+                    <i class="bi bi-door-open"></i> 退出
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <div class="page-title">
+                <i class="bi bi-list-check"></i> 投注记录
+            </div>
+            <div class="page-subtitle">
+                查看您的完整投注历史和详细统计分析
+            </div>
+        </div>
+
+        <!-- 统计概览 -->
+        <div class="stats-grid">
+            <div class="stat-card primary">
+                <div class="stat-header">
+                    <i class="stat-icon primary bi bi-graph-up"></i>
+                    <div class="stat-title">总投注次数</div>
+                </div>
+                <div class="stat-value">{{ betting_stats.total_bets or 0 }}</div>
+                <div class="stat-change">
+                    {% if betting_stats.settled_bets %}
+                        其中 {{ betting_stats.settled_bets }} 次已结算
+                    {% else %}
+                        暂无已结算投注
+                    {% endif %}
+                </div>
+                <div class="stat-progress">
+                    <div class="stat-progress-bar primary" style="width: {{ (betting_stats.settled_bets / betting_stats.total_bets * 100) if betting_stats.total_bets and betting_stats.total_bets > 0 else 0 }}%"></div>
+                </div>
+            </div>
+
+            <div class="stat-card success">
+                <div class="stat-header">
+                    <i class="stat-icon success bi bi-trophy"></i>
+                    <div class="stat-title">投注胜率</div>
+                </div>
+                <div class="stat-value">{{ betting_stats.win_rate or 0 }}%</div>
+                <div class="stat-change">
+                    {% if betting_stats.win_bets %}
+                        {{ betting_stats.win_bets }} 次中奖 / {{ betting_stats.settled_bets or 0 }} 次结算
+                    {% else %}
+                        暂无中奖记录
+                    {% endif %}
+                </div>
+                <div class="stat-progress">
+                    <div class="stat-progress-bar success" style="width: {{ betting_stats.win_rate or 0 }}%"></div>
+                </div>
+            </div>
+
+            <div class="stat-card warning">
+                <div class="stat-header">
+                    <i class="stat-icon warning bi bi-cash-stack"></i>
+                    <div class="stat-title">总投注金额</div>
+                </div>
+                <div class="stat-value">¥{{ "%.0f"|format(betting_stats.total_bet_amount or 0) }}</div>
+                <div class="stat-change">
+                    平均每次 ¥{{ "%.0f"|format((betting_stats.total_bet_amount / betting_stats.total_bets) if betting_stats.total_bets and betting_stats.total_bets > 0 else 0) }}
+                </div>
+                <div class="stat-progress">
+                    <div class="stat-progress-bar warning" style="width: 70%"></div>
+                </div>
+            </div>
+
+            <div class="stat-card {{ 'success' if (betting_stats.total_win_amount or 0) > (betting_stats.total_bet_amount or 0) else 'danger' }}">
+                <div class="stat-header">
+                    <i class="stat-icon {{ 'success' if (betting_stats.total_win_amount or 0) > (betting_stats.total_bet_amount or 0) else 'danger' }} bi bi-{{ 'arrow-up-circle' if (betting_stats.total_win_amount or 0) > (betting_stats.total_bet_amount or 0) else 'arrow-down-circle' }}"></i>
+                    <div class="stat-title">净盈亏</div>
+                </div>
+                {% set net_profit = (betting_stats.total_win_amount or 0) - (betting_stats.total_bet_amount or 0) %}
+                <div class="stat-value {{ 'profit-positive' if net_profit > 0 else 'profit-negative' if net_profit < 0 else 'profit-zero' }}">
+                    {% if net_profit > 0 %}+{% endif %}¥{{ "%.2f"|format(net_profit) }}
+                </div>
+                <div class="stat-change">
+                    总收益 ¥{{ "%.2f"|format(betting_stats.total_win_amount or 0) }}
+                </div>
+            </div>
+        </div>
+
+        <!-- 筛选器 -->
+        <div class="filters">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label class="filter-label">状态:</label>
+                    <select class="filter-select" id="statusFilter">
+                        <option value="">全部</option>
+                        <option value="pending">待结算</option>
+                        <option value="win">已中奖</option>
+                        <option value="lose">未中奖</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">投注类型:</label>
+                    <select class="filter-select" id="typeFilter">
+                        <option value="">全部</option>
+                        <option value="胜">主胜</option>
+                        <option value="平">平局</option>
+                        <option value="负">主负</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">排序:</label>
+                    <select class="filter-select" id="sortFilter">
+                        <option value="time_desc">时间降序</option>
+                        <option value="time_asc">时间升序</option>
+                        <option value="amount_desc">金额降序</option>
+                        <option value="amount_asc">金额升序</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 投注记录列表 -->
+        <div class="records-container">
+            <div class="records-header">
+                <h5 class="records-title">
+                    <i class="bi bi-clock-history"></i> 投注历史
+                </h5>
+                <div class="records-count">
+                    共 {{ records|length }} 条记录
+                </div>
+            </div>
+            <div class="records-content">
+                {% if records %}
+                    {% for record in records %}
+                    <div class="record-item" data-status="{{ record.status or 'pending' }}" data-type="{{ record.bet_option }}" data-time="{{ record.bet_time }}" data-amount="{{ record.bet_amount }}">
+                        <div class="record-main">
+                            <div class="record-info">
+                                <div class="record-match">{{ record.home_team }} vs {{ record.away_team }}</div>
+                                <div class="record-details">
+                                    <span><i class="bi bi-calendar"></i> {{ record.match_date }} {{ record.match_time }}</span>
+                                    <span><i class="bi bi-trophy"></i> {{ record.league }}</span>
+                                    <span><i class="bi bi-clock"></i> {{ record.bet_time }}</span>
+                                </div>
+                                <div class="record-bet">
+                                    <span class="bet-type-badge {{ record.bet_option | lower }}">{{ record.bet_option }}</span>
+                                    <span>投注金额: ¥{{ record.bet_amount }}</span>
+                                    <span>赔率: {{ record.odds }}</span>
+                                </div>
+                            </div>
+                            <div class="record-amount">
+                                <div class="amount-value">¥{{ "%.2f"|format(record.bet_amount) }}</div>
+                                <div class="odds-value">@ {{ record.odds }}</div>
+                                {% if record.status == 'pending' %}
+                                    <div style="font-size: 0.8rem; color: #ed8936;">
+                                        预计收益: ¥{{ "%.2f"|format(record.potential_win) }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="record-status">
+                            <div class="status-info">
+                                {% if record.status == 'pending' %}
+                                    <span class="status-badge pending">
+                                        <i class="bi bi-clock"></i> 待结算
+                                    </span>
+                                {% elif record.bet_result == 'win' %}
+                                    <span class="status-badge win">
+                                        <i class="bi bi-check-circle"></i> 已中奖
+                                    </span>
+                                {% else %}
+                                    <span class="status-badge lose">
+                                        <i class="bi bi-x-circle"></i> 未中奖
+                                    </span>
+                                {% endif %}
+                                
+                                {% if record.actual_result %}
+                                    <span style="font-size: 0.9rem; color: #718096;">
+                                        实际结果: <strong>{{ record.actual_result }}</strong>
+                                    </span>
+                                {% endif %}
+                                
+                                {% if record.settled_time %}
+                                    <span style="font-size: 0.8rem; color: #a0aec0;">
+                                        结算时间: {{ record.settled_time }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <div class="profit-display">
+                                {% if record.status == 'pending' %}
+                                    <span class="profit-zero">待结算</span>
+                                {% elif record.bet_result == 'win' %}
+                                    <span class="profit-positive">+¥{{ "%.2f"|format(record.actual_win) }}</span>
+                                {% else %}
+                                    <span class="profit-negative">-¥{{ "%.2f"|format(record.bet_amount) }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <h5>暂无投注记录</h5>
+                        <p>您还没有进行过任何投注</p>
+                        <a href="{{ url_for('betting_center') }}" class="btn btn-primary mt-3">
+                            <i class="bi bi-cash-coin"></i> 开始投注
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 进度条动画
+            const progressBars = document.querySelectorAll('.stat-progress-bar');
+            progressBars.forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 500);
+            });
+
+            // 筛选功能
+            const statusFilter = document.getElementById('statusFilter');
+            const typeFilter = document.getElementById('typeFilter');
+            const sortFilter = document.getElementById('sortFilter');
+            const records = document.querySelectorAll('.record-item');
+
+            function filterRecords() {
+                const statusValue = statusFilter.value;
+                const typeValue = typeFilter.value;
+                const sortValue = sortFilter.value;
+
+                let visibleRecords = Array.from(records);
+
+                // 状态筛选
+                if (statusValue) {
+                    visibleRecords = visibleRecords.filter(record => {
+                        const status = record.dataset.status;
+                        if (statusValue === 'win' || statusValue === 'lose') {
+                            return record.querySelector('.status-badge').classList.contains(statusValue);
+                        }
+                        return status === statusValue;
+                    });
+                }
+
+                // 类型筛选
+                if (typeValue) {
+                    visibleRecords = visibleRecords.filter(record => {
+                        return record.dataset.type === typeValue;
+                    });
+                }
+
+                // 隐藏所有记录
+                records.forEach(record => {
+                    record.style.display = 'none';
+                });
+
+                // 排序
+                if (sortValue) {
+                    visibleRecords.sort((a, b) => {
+                        switch (sortValue) {
+                            case 'time_desc':
+                                return new Date(b.dataset.time) - new Date(a.dataset.time);
+                            case 'time_asc':
+                                return new Date(a.dataset.time) - new Date(b.dataset.time);
+                            case 'amount_desc':
+                                return parseFloat(b.dataset.amount) - parseFloat(a.dataset.amount);
+                            case 'amount_asc':
+                                return parseFloat(a.dataset.amount) - parseFloat(b.dataset.amount);
+                            default:
+                                return 0;
+                        }
+                    });
+                }
+
+                // 显示筛选后的记录
+                const container = document.querySelector('.records-content');
+                visibleRecords.forEach((record, index) => {
+                    record.style.display = 'block';
+                    container.appendChild(record);
+                });
+
+                // 更新记录数量
+                document.querySelector('.records-count').textContent = `共 ${visibleRecords.length} 条记录`;
+            }
+
+            statusFilter.addEventListener('change', filterRecords);
+            typeFilter.addEventListener('change', filterRecords);
+            sortFilter.addEventListener('change', filterRecords);
+        });
+    </script>
+</body>
+</html> 
