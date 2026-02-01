@@ -13,9 +13,39 @@ logging.basicConfig(
 
 HISTORICAL_CSV = 'jc_history_api.csv'
 
+def is_valid_match(match):
+    """验证比赛数据是否有效"""
+    # 1. 必须有比赛ID
+    if not match.get('比赛ID'):
+        return False
+
+    # 2. 比赛时间不能为空
+    if not match.get('比赛时间'):
+        return False
+
+    # 3. 验证比分格式 - 应该是 数字:数字 的格式，排除 0:00, 1:00 这种时间格式
+    half_score = str(match.get('半场比分', '')).strip()
+    full_score = str(match.get('全场比分', '')).strip()
+
+    # 检查是否是无效的时间格式比分
+    for score in [half_score, full_score]:
+        if score and score.endswith(":00"):
+            # 检查是否是形如 0:00, 1:00, 2:00 这样的无效比分
+            if len(score) <= 4 and score.count(":") == 1:
+                return False
+
+    # 4. 至少需要有一个赔率不为空
+    has_odds = any([
+        match.get('胜赔率'),
+        match.get('平赔率'),
+        match.get('负赔率')
+    ])
+
+    return has_odds
+
 # 原csv字段顺序
 CSV_COLUMNS = [
-    '比赛时间','比赛编号','联赛名称','主队','客队','主队（让球）vs客队','半场比分','全场比分','总进球数',
+    '比赛时间','比赛ID','联赛名称','主队','客队','主队（让球）vs客队','半场比分','全场比分','总进球数',
     '胜赔率','平赔率','负赔率'
 ]
 
@@ -77,9 +107,10 @@ def main():
             logging.warning(f'{date_str} fetch_historical_match_details 失败: {matches}')
             continue
         for match in matches:
-            # 检查是否有比赛编号，如果没有则跳过
-            if not match.get('比赛编号'):
+            # 数据验证 - 过滤无效数据
+            if not is_valid_match(match):
                 continue
+
             # 确保所有字段都存在，缺失的补空字符串
             row = {}
             for col in CSV_COLUMNS:
@@ -97,9 +128,9 @@ def main():
     file_exists = os.path.exists(HISTORICAL_CSV)
     if file_exists:
         try:
-            # 读取已有的比赛编号用于去重
-            old_ids = pd.read_csv(HISTORICAL_CSV, usecols=['比赛编号'], encoding='utf-8-sig')['比赛编号'].astype(str).tolist()
-            new_df = new_df[~new_df['比赛编号'].astype(str).isin(old_ids)]
+            # 读取已有的比赛ID用于去重
+            old_ids = pd.read_csv(HISTORICAL_CSV, usecols=['比赛ID'], encoding='utf-8-sig')['比赛ID'].astype(str).tolist()
+            new_df = new_df[~new_df['比赛ID'].astype(str).isin(old_ids)]
         except (FileNotFoundError, ValueError, KeyError) as e:
             logging.warning(f"读取旧数据比赛编号失败，可能文件为空或格式不正确: {e}")
             # 文件存在但无法正确读取，当作新文件处理

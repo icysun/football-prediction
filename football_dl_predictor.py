@@ -308,8 +308,8 @@ class FootballDLPredictor(BasePredictor):
         
         # 准备比分标签
         def create_score_label(home, away):
-            home = min(6, home)  # 将6及以上的进球数归为6+
-            away = min(6, away)  # 将6及以上的进球数归为6+
+            home = int(min(6, home))  # 将6及以上的进球数归为6+
+            away = int(min(6, away))  # 将6及以上的进球数归为6+
             return home * 7 + away  # 7x7的比分矩阵
         
         y_score = np.array([create_score_label(h, a) for h, a in zip(self.df['home_goals'], self.df['away_goals'])])

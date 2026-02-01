@@ -48,7 +48,12 @@ class FootballPredictor(BasePredictor):
         self.df['home_goals'] = home_goals_list
         self.df['away_goals'] = away_goals_list
         self.df['total_goals'] = total_goals_list
-        
+
+        # 确保进球数为整数类型（避免后续浮点数问题）
+        self.df['home_goals'] = pd.to_numeric(self.df['home_goals'], errors='coerce').astype('Int64')
+        self.df['away_goals'] = pd.to_numeric(self.df['away_goals'], errors='coerce').astype('Int64')
+        self.df['total_goals'] = pd.to_numeric(self.df['total_goals'], errors='coerce').astype('Int64')
+
         # 处理比分数据
         def get_result(score):
             try:
@@ -399,8 +404,9 @@ class FootballPredictor(BasePredictor):
         
         # 准备比分标签
         def create_score_label(home, away):
-            home = min(6, home)  # 将6及以上的进球数归为6+
-            away = min(6, away)  # 将6及以上的进球数归为6+
+            # 转换为整数，避免浮点数（如 4.0）导致标签不一致
+            home = int(min(6, home))  # 将6及以上的进球数归为6+
+            away = int(min(6, away))  # 将6及以上的进球数归为6+
             return f"{home if home < 6 else '6+'}:{away if away < 6 else '6+'}"
         
         y_score = self.df.apply(lambda x: create_score_label(x['home_goals'], x['away_goals']), axis=1)
@@ -732,11 +738,79 @@ class FootballPredictor(BasePredictor):
     
     def _train_score_model(self, X_train, y_train, X_test, y_test, n_trials):
         """训练比分预测模型"""
+        # 创建完整的7x7比分标签集（49种可能）
+        def create_all_possible_scores():
+            """生成所有可能的比分标签"""
+            all_scores = []
+            for home in range(7):  # 0,1,2,3,4,5,6+
+                home_label = home if home < 6 else '6+'
+                for away in range(7):  # 0,1,2,3,4,5,6+
+                    away_label = away if away < 6 else '6+'
+                    all_scores.append(f"{home_label}:{away_label}")
+            return all_scores
+
+        # 创建全局标签编码器（包含所有49种可能的比分）
+        all_possible_labels = create_all_possible_scores()
+        le = LabelEncoder()
+        le.fit(all_possible_labels)
+
+        NUM_CLASSES = 49  # 7x7 比分矩阵
+
+        # 过滤掉不在标签编码器中的样本
+        valid_train_mask = y_train.isin(le.classes_)
+        valid_test_mask = y_test.isin(le.classes_)
+
+        if not valid_train_mask.all():
+            print(f"警告：过滤掉 { (~valid_train_mask).sum() } 个训练集样本（标签无效）")
+        if not valid_test_mask.all():
+            print(f"警告：过滤掉 { (~valid_test_mask).sum() } 个测试集样本（标签无效）")
+
+        X_train_filtered = X_train[valid_train_mask]
+        y_train_filtered = y_train[valid_train_mask]
+        X_test_filtered = X_test[valid_test_mask]
+        y_test_filtered = y_test[valid_test_mask]
+
+        # 编码标签
+        y_train_encoded = le.transform(y_train_filtered)
+        y_test_encoded = le.transform(y_test_filtered)
+
+        # 关键修复：确保训练集包含所有49个类别
+        # 如果训练集缺少某些类别，创建虚拟样本添加到训练集
+        train_classes = set(y_train_encoded)
+        all_classes = set(range(NUM_CLASSES))
+        missing_classes = all_classes - train_classes
+
+        if missing_classes:
+            print(f"警告：训练集缺少 {len(missing_classes)} 个类别: {sorted(missing_classes)}")
+
+            # 策略：为缺失的类别创建虚拟样本，保持数据类型一致
+            is_dataframe = isinstance(X_train_filtered, pd.DataFrame)
+
+            if is_dataframe:
+                # DataFrame: 创建一个带列名的虚拟样本行
+                mean_row = pd.DataFrame([X_train_filtered.mean().values],
+                                       columns=X_train_filtered.columns,
+                                       index=[0])
+                for missing_class in sorted(missing_classes):
+                    X_train_filtered = pd.concat([X_train_filtered, mean_row],
+                                                 ignore_index=True)
+                    y_train_encoded = np.concatenate([y_train_encoded, [missing_class]])
+                    print(f"  已为类别 {missing_class} 添加虚拟样本到训练集")
+            else:
+                # numpy array: 创建虚拟样本行
+                mean_features = X_train_filtered.mean(axis=0).reshape(1, -1)
+                for missing_class in sorted(missing_classes):
+                    X_train_filtered = np.vstack([X_train_filtered, mean_features])
+                    y_train_encoded = np.concatenate([y_train_encoded, [missing_class]])
+                    print(f"  已为类别 {missing_class} 添加虚拟样本到训练集")
+
+            print(f"训练集现在包含 {len(set(y_train_encoded))} 个类别")
+
         def objective(trial):
             params = {
                 'objective': 'multi:softprob',
                 'eval_metric': 'mlogloss',
-                'num_class': len(y_train.unique()),
+                'num_class': NUM_CLASSES,
                 'max_depth': trial.suggest_int('max_depth', 3, 10),
                 'learning_rate': trial.suggest_float('learning_rate', 0.01, 0.3),
                 'n_estimators': trial.suggest_int('n_estimators', 100, 1000),
@@ -748,57 +822,50 @@ class FootballPredictor(BasePredictor):
                 'reg_lambda': trial.suggest_float('reg_lambda', 0, 10),
                 'random_state': 42
             }
-            
-            # 创建标签编码器
-            le = LabelEncoder()
-            y_train_encoded = le.fit_transform(y_train)
-            y_test_encoded = le.transform(y_test)
-            
-            # 训练模型
+
+            # 训练模型（确保使用包含所有类别的训练集）
             model = xgb.XGBClassifier(**params)
             model.fit(
-                X_train, y_train_encoded,
-                eval_set=[(X_test, y_test_encoded)],
+                X_train_filtered, y_train_encoded,
+                eval_set=[(X_test_filtered, y_test_encoded)],
                 early_stopping_rounds=20,
                 verbose=False
             )
-            
+
             # 预测并计算准确率
-            y_pred = model.predict(X_test)
+            y_pred = model.predict(X_test_filtered)
             accuracy = accuracy_score(y_test_encoded, y_pred)
-            
+
             return accuracy
-        
+
         # 创建study对象
         study = optuna.create_study(direction='maximize')
         study.optimize(objective, n_trials=n_trials)
-        
+
         # 使用最佳参数训练最终模型
         best_params = study.best_params
         best_params.update({
             'objective': 'multi:softprob',
             'eval_metric': 'mlogloss',
-            'num_class': len(y_train.unique()),
+            'num_class': NUM_CLASSES,
             'random_state': 42
         })
-        
-        # 创建标签编码器并保存
-        le = LabelEncoder()
-        y_train_encoded = le.fit_transform(y_train)
+
+        # 保存全局标签编码器
         self.label_encoders['score'] = le
-        
-        # 训练最终模型
+
+        # 训练最终模型（使用过滤后的数据）
         final_model = xgb.XGBClassifier(**best_params)
         final_model.fit(
-            X_train, y_train_encoded,
-            eval_set=[(X_test, le.transform(y_test))],
+            X_train_filtered, y_train_encoded,
+            eval_set=[(X_test_filtered, y_test_encoded)],
             early_stopping_rounds=20,
             verbose=False
         )
-        
+
         # 保存study对象
         self.studies['score'] = study
-        
+
         return final_model
     
     def save_models(self, filepath='football_models.pkl'):
